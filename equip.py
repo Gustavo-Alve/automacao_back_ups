@@ -12,16 +12,8 @@ IPS = [
     "http://192.168.0.252/",
 ]
 
-while True:
-        modelo = input("Qual Modelo Do equipamento ?: " "(AX3000 - V9 - F670): ").strip().lower()
-        if not modelo:
-            print("Digite um modelo de Equipamento Por Favor")
-            continue
 
-        if modelo in ('ax3000','f670', 'v9'):
-            break
-                #(url = endereço que vamos testar ) (#time connect = tempo maximo pra conectar) (#time_read = tempo maximo pra esperar alguma resposta)
-
+#(url = endereço que vamos testar ) (#time connect = tempo maximo pra conectar) (#time_read = tempo maximo pra esperar alguma resposta)
 #Responsavel por validar se o ip responde ou nao
 def ip_disponivel(url: str, timeout_connect=1.5, timeout_read=2.5) -> tuple[bool, str]: #retorna True Ou False 
     try:
@@ -57,10 +49,47 @@ def executar_playwright(url: str):
         pagina = context.new_page()
 
         try:
-            if modelo == 'ax3000':
-                pagina.goto(url, timeout=15000)
-                pagina.wait_for_load_state("domcontentloaded", timeout=15000)
-                print(f"[PLAYWRIGHT] Acessando: {url}")
+            pagina.goto(url, timeout=15000)
+            pagina.wait_for_load_state("domcontentloaded", timeout=15000)
+            print(f"[PLAYWRIGHT] Acessando: {url}")
+            nome_equip = ""
+            nome_header = ""
+            # --- Protege leitura do nome do equipamento ---
+            equip_locator = pagina.locator('//*[@id="loginWrapper"]/div[1]')
+            if equip_locator.count() > 0:
+                nome_equip = equip_locator.text_content().strip()
+
+            # --- Protege leitura do header ---
+            header_locator = pagina.get_by_text("Please login to continue...")
+            if header_locator.count() > 0:
+                nome_header = header_locator.text_content().strip()
+
+            if 'aF670L' in nome_equip:
+                pagina.get_by_role("textbox", name="Usuário").click()
+                time.sleep(0.5)
+                pagina.get_by_role("textbox", name="Usuário").fill('multipro')
+                time.sleep(0.5)
+                pagina.get_by_role("textbox", name="Senha").click()
+                time.sleep(0.5)
+                pagina.get_by_role("textbox", name="Senha").fill('multipro')
+                time.sleep(1)
+                pagina.get_by_role("button", name="Entrar").click()
+                time.sleep(1)
+                pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
+                time.sleep(1)
+                pagina.get_by_role("link", name="Administração de sistema").click()
+                time.sleep(1)
+                pagina.get_by_text("Gerenciamento de configuração").click()
+                time.sleep(1)
+                pagina.get_by_role("heading", name="Restaurar configuração padrão").click()
+                time.sleep(1)
+                pagina.locator("#DefCfgUpload").set_input_files(back_up_V9)
+                time.sleep(1)
+                pagina.get_by_role("button", name="Restaurando uma configuração").click()
+                time.sleep(1)
+                pagina.get_by_role("button", name="OK").click()
+                time.sleep(2)
+            elif 'aF6600P' in nome_equip:
                 pagina.get_by_role("textbox", name="Usuário").click()
                 time.sleep(1)
                 pagina.get_by_role("textbox", name="Usuário").fill('multipro')
@@ -85,42 +114,7 @@ def executar_playwright(url: str):
                 time.sleep(1)
                 pagina.get_by_role("button", name="OK").click()
                 time.sleep(2)
-
-            elif modelo == "v9":
-                pagina.goto(url, timeout=15000)
-                pagina.wait_for_load_state("domcontentloaded", timeout=15000)
-                print(f"[PLAYWRIGHT] Acessando: {url}")
-                pagina.get_by_role("textbox", name="Usuário").click()
-                time.sleep(1)
-                pagina.get_by_role("textbox", name="Usuário").fill('multipro')
-                time.sleep(1)
-                pagina.get_by_role("textbox", name="Senha").click()
-                time.sleep(1)
-                pagina.get_by_role("textbox", name="Senha").fill('multipro')
-                time.sleep(1)
-                pagina.get_by_role("button", name="Entrar").click()
-                time.sleep(1)
-                pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
-                time.sleep(1)
-                pagina.get_by_role("link", name="Administração de sistema").click()
-                time.sleep(1)
-                pagina.get_by_text("Gerenciamento de configuração").click()
-                time.sleep(1)
-                pagina.get_by_role("heading", name="Restaurar configuração padrão").click()
-                time.sleep(1)
-                pagina.locator("#DefCfgUpload").set_input_files(back_up_V9)
-                time.sleep(1)
-                pagina.get_by_role("button", name="Restaurando uma configuração").click()
-                time.sleep(1)
-                pagina.get_by_role("button", name="OK").click()
-                time.sleep(2)
-
-
-            elif modelo == 'f670':
-                pagina.goto(url, timeout=15000)
-                pagina.wait_for_load_state("domcontentloaded", timeout=15000)
-                print(f"[PLAYWRIGHT] Acessando: {url}")
-                time.sleep(1)
+            elif "Please login to continue..." in nome_header:
                 pagina.locator("#Frm_Username").click()
                 time.sleep(1)
                 pagina.locator("#Frm_Username").fill('multipro')
@@ -145,12 +139,11 @@ def executar_playwright(url: str):
                 time.sleep(1)
 
         except PWTimeout:
-            print(f"[PLAYWRIGHT] Timeout ao abrir: {url}") #caso passe do tempo 
+                print(f"[PLAYWRIGHT] Timeout ao abrir: {url}") #caso passe do tempo 
         finally:
-            context.close()
-            time.sleep(5)
-            browser.close()
-
+                context.close()
+                time.sleep(5)
+                browser.close()
 def main():
     escolhido = escolher_primeiro_ip_disponivel(IPS)
     if not escolhido:
