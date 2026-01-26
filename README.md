@@ -21,9 +21,15 @@ aciona a restauração via interface.
 
 Suporta modelos como:
 
-✔️ AX3000
+✔️ AX3000+
+
+![alt text](image-2.png)
+
 ✔️ V9
+![alt text](image-1.png)
+
 ✔️ F670
+![alt text](image.png)
 
 Os backups de configuração são carregados a partir de arquivos .bin presentes no repositório.
 
