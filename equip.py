@@ -1,14 +1,10 @@
 from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
-import time
+import time, datetime
 import os
 import pandas as pd
 import requests
 from requests.exceptions import RequestException
 
-
-#task para fazer 
-#1----
-#fazer tentativas de outra senha '"wgodwl810'
 
 while True:
     #back_ups
@@ -20,7 +16,7 @@ while True:
         "http://192.168.0.252/",
     ]
 
-
+    
     #(url = endereço que vamos testar ) (#time connect = tempo maximo pra conectar) (#time_read = tempo maximo pra esperar alguma resposta)
     #Responsavel por validar se o ip responde ou nao
     def ip_disponivel(url: str, timeout_connect=1.5, timeout_read=2.5) -> tuple[bool, str]: #retorna True Ou False 
@@ -47,12 +43,13 @@ while True:
         return None
 
     #funçao para salvar modelo e mac do equipamento em uma arquivo excel
-    def salvar_equipamento(modelo, mac):
+    def salvar_equipamento(modelo, mac ,data):
         arquivo = "relatorio_equip.xlsx"
 
         novo_registro = pd.DataFrame([{
             "Modelo": modelo,
-            "N° Mac": mac
+            "N° Mac": mac,
+            "Data": data
         }])
 
         if os.path.exists(arquivo):
@@ -61,8 +58,9 @@ while True:
         else:
             df_final = novo_registro
 
-        
+
         df_final.to_excel(arquivo, index=False) #salva as novas alterações e se, criar um novo arquivo
+
 
     #função pra executar o playwright
     def executar_playwright(url: str):
@@ -94,6 +92,8 @@ while True:
                 if header_locator.count() > 0:
                     nome_header_ptbr = header_locator.text_content().strip()
 
+
+                #Equipamento F670-V9
                 if 'aF670L' in nome_equip:
                     pagina.get_by_role("textbox", name="Usuário").fill('multipro')
                     time.sleep(0.5)
@@ -101,15 +101,59 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="Entrar").click()
                     time.sleep(1)
-                    elemento_locator =  pagina.get_by_text("Sair da Configuração Rápida") #fazer possivel clicke nessa parte
-                    if elemento_locator.count() > 0:
+                    senha_2 = pagina.locator("#login_error")
+                    if senha_2.is_visible():
+                        pagina.get_by_role("textbox", name="Senha").fill('another')
+                        time.sleep(1)
+                        elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
+                        if elemento_locator.is_visible():
+                            elemento_locator.click()
+                        else:   
+                            print('Elemento nao existe ')
+
+                        
+                        pagina.get_by_role("button", name="Entrar").click()
+                        time.sleep(1)
+                        pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
+                        modelo_equip = pagina.get_by_text("F670L", exact=True).text_content()
+                        time.sleep(0.5)
+                        pagina.get_by_role("link", name="Rede local").click()
+                        pagina.get_by_role("heading", name="Estado da WLAN", exact=True).click()
+                        endereco_mac = pagina.locator('//*[@id="Bssid:0"]').text_content()
+                        time.sleep(0.5)
+                        pagina.locator("#BackToTop").click()
+                        time.sleep(0.5)
+                        pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
+                        hora = datetime.datetime.now()
+                        salvar_equipamento(
+                            modelo= modelo_equip,
+                            mac = endereco_mac,
+                            data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
+                        )
+                        pagina.get_by_role("link", name="Administração de sistema").click()
+                        time.sleep(1)
+                        pagina.get_by_text("Gerenciamento de configuração").click()
+                        time.sleep(1)
+                        pagina.get_by_role("heading", name="Restaurar configuração padrão").click()
+                        time.sleep(1)
+                        pagina.locator("#DefCfgUpload").set_input_files(back_up_V9)
+                        time.sleep(1)
+                        pagina.get_by_role("button", name="Restaurando uma configuração").click()
+                        time.sleep(1)
+                        pagina.get_by_role("button", name="OK").click()
+                        time.sleep(2)
+                    else:
+                        print('senha padrao')
+
+                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
+                    if elemento_locator.is_visible():
                         elemento_locator.click()
                     else:
-                        print("[AVISO] Elemento não encontrado")
+                        print('Elemento nao existe ')
                         
                     time.sleep(1)
                     pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
-                    modelo_equip = pagina.get_by_text("F670L", exact=True).text_content()
+                    modelo_equip = pagina.locator('//*[@id="ModelName"]').text_content()
                     time.sleep(0.5)
                     pagina.get_by_role("link", name="Rede local").click()
                     pagina.get_by_role("heading", name="Estado da WLAN", exact=True).click()
@@ -118,9 +162,11 @@ while True:
                     pagina.locator("#BackToTop").click()
                     time.sleep(0.5)
                     pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
+                    hora = datetime.datetime.now()
                     salvar_equipamento(
                         modelo= modelo_equip,
-                        mac = endereco_mac
+                        mac = endereco_mac,
+                        data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
                     )
                     pagina.get_by_role("link", name="Administração de sistema").click()
                     time.sleep(1)
@@ -134,7 +180,10 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="OK").click()
                     time.sleep(2)
+                    
 
+                
+                #Equipamento AX3000
                 elif 'aF6600P' in nome_equip:
                     pagina.get_by_role("textbox", name="Usuário").fill('multipro')
                     time.sleep(0.5)
@@ -142,13 +191,61 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="Entrar").click()
                     time.sleep(1)
-                    # Validar se elemento existe antes de clicar
-                    elemento_locator = pagina.get_by_text("Sair da Configuração Rápida") #fazer possivel clicke nessa parte
-                    if elemento_locator.count() > 0:
+                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
+                    if elemento_locator.is_visible():
                         elemento_locator.click()
-                        time.sleep(1)
                     else:
-                        print("[AVISO] Elemento não encontrado")
+                        print('Elemento nao existe ')
+                    senha_2 = pagina.locator("#login_error")
+                    if senha_2.is_visible():
+                        pagina.get_by_role("textbox", name="Senha").fill('another')
+                        pagina.get_by_role("button", name="Entrar").click()
+                        elemento_locator = pagina.locator('//*[@id="Outquicksetup"]') 
+                        if elemento_locator.is_visible():
+                            elemento_locator.click()
+                        else:
+                            print('Elemento nao existe ')
+                        time.sleep(1)
+                        pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
+                        time.sleep(1)
+                        modelo_equip = pagina.locator('//*[@id="ModelName"]').text_content()
+                        time.sleep(0.5)
+                        pagina.get_by_role("link", name="Rede local").click()
+                        pagina.get_by_role("heading", name="Estado da WLAN", exact=True).click()
+                        endereco_mac = pagina.locator('//*[@id="Bssid:0"]').text_content() 
+                        time.sleep(0.5)
+                        pagina.locator("#BackToTop").click()
+                        time.sleep(0.5)
+                        hora = datetime.datetime.now()
+                        salvar_equipamento(
+                            modelo= modelo_equip,
+                            mac = endereco_mac,
+                            data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
+                        )
+                        pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
+                        time.sleep(0.5)
+                        pagina.get_by_role("link", name="Administração de sistema").click()
+                        time.sleep(1)
+                        pagina.get_by_text("Gerenciamento de configuração").click()
+                        time.sleep(1)
+                        pagina.get_by_role("heading", name="Restaurar configuração padrão").click()
+                        time.sleep(1)
+                        pagina.locator("#DefCfgUpload").set_input_files(back_up_ax3000)
+                        time.sleep(1)
+                        pagina.get_by_role("button", name="Restaurando uma configuração").click()
+                        time.sleep(1)
+                        pagina.get_by_role("button", name="OK").click()
+                        time.sleep(2)
+
+                    else:
+                        print('senha padrao')
+                    # Validar se elemento existe antes de clicar
+                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
+                    if elemento_locator.is_visible():
+                        elemento_locator.click()
+                    else:
+                        print('Elemento nao existe ')
+
 
                     pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
                     time.sleep(1)
@@ -156,13 +253,15 @@ while True:
                     time.sleep(0.5)
                     pagina.get_by_role("link", name="Rede local").click()
                     pagina.get_by_role("heading", name="Estado da WLAN", exact=True).click()
-                    endereco_mac = pagina.locator('//*[@id="Bssid:0"]').text_content()
+                    endereco_mac = pagina.locator('//*[@id="Bssid:0"]').text_content() 
                     time.sleep(0.5)
                     pagina.locator("#BackToTop").click()
                     time.sleep(0.5)
+                    hora = datetime.datetime.now()
                     salvar_equipamento(
                         modelo= modelo_equip,
-                        mac = endereco_mac
+                        mac = endereco_mac,
+                        data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
                     )
                     pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
                     time.sleep(0.5)
@@ -178,21 +277,30 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="OK").click()
                     time.sleep(2)
-  #  modelo_equip = pagina.locator('//*[@id="Frm_ModelName"]').text_content()  endereco_mac = pagina.locator('//*[@id="Frm_PonSerialNumber"]').text_content()
+
+                
+                #equipamento F670L
                 elif "Please login to continue..." in nome_header:
                     pagina.locator("#Frm_Username").fill('multipro')
                     pagina.locator("#Frm_Password").fill('multipro')
                     time.sleep(1)
                     pagina.get_by_role("button", name="Login").click()
                     time.sleep(1)
-                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("User Interface", exact=True).click()
-                    modelo_equip = 'F670L'
-                    endereco_mac = pagina.locator('//*[@id="td_Bssid0"]').text_content()
-                    salvar_equipamento(
-                        modelo= modelo_equip,
-                        mac = endereco_mac
-                    )
+                    pagina.wait_for_selector('iframe[name="mainFrame"]')
+                    frame = pagina.frame(name="mainFrame")
+                    frame.locator('#Frm_ModelName').wait_for(state="visible") #frame utilizado para validar os campos onde estao armazenados as informações como (MODELO - MAC)
+                    modelo_equip = frame.locator('#Frm_ModelName').inner_text()
+                    frame = pagina.frame(name="mainFrame")
+                    frame.get_by_text("User Interface").click()
                     time.sleep(1)
+                    endereco_mac = frame.locator('#td_Bssid0').inner_text()
+                    time.sleep(1)
+                    hora = datetime.datetime.now()
+                    salvar_equipamento(
+                        modelo=modelo_equip,
+                        mac=endereco_mac,
+                        data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
+                    )
                     pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("Administration").click()
                     time.sleep(1)
                     pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("System Management").click()
@@ -205,26 +313,43 @@ while True:
                     time.sleep(1)
                     pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Confirm").click()
                     time.sleep(1)
+
                 #elif adiconado pois em alguns equipamentos do Modelo F670L estao em portugues e causa divergência nos botoes
                 elif "Por favor faça o login para" in nome_header_ptbr: 
-                    pagina.locator("#Frm_Username").fill('multipro')
+                    pagina.locator("#TestLang01").click()
                     time.sleep(0.5)
+                    pagina.locator("#Frm_Username").fill('multipro')
                     pagina.locator("#Frm_Password").fill('multipro')
                     time.sleep(1)
                     pagina.get_by_role("button", name="Login").click()
                     time.sleep(1)
-                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("Administração").click()
+                    pagina.wait_for_selector('iframe[name="mainFrame"]')
+                    frame = pagina.frame(name="mainFrame")
+                    frame.locator('#Frm_ModelName').wait_for(state="visible") #frame utilizado para validar os campos onde estao armazenados as informações como (MODELO - MAC)
+                    modelo_equip = frame.locator('#Frm_ModelName').inner_text()
+                    frame = pagina.frame(name="mainFrame")
+                    frame.get_by_text("User Interface").click()
                     time.sleep(1)
-                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("Administração de sistema").click()
+                    endereco_mac = frame.locator('#td_Bssid0').inner_text()
                     time.sleep(1)
-                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("Gerenciamento de configuração").click()
+                    hora = datetime.datetime.now()
+                    salvar_equipamento(
+                        modelo=modelo_equip,
+                        mac=endereco_mac,
+                        data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
+                    )
+                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("Administration").click()
+                    time.sleep(1)
+                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("System Management").click()
+                    time.sleep(1)
+                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("cell", name="Default Configuration Management", exact=True).click()
                     time.sleep(1)
                     pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Choose File").set_input_files(back_up_f670)
+                    time.sleep(2)
+                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Restore Configuration").click()
                     time.sleep(1)
-                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Restaurar configuração").click()
+                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Confirm").click()
                     time.sleep(1)
-                    pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="confirmar").click()
-                    time.sleep(3)
 
 
             except PWTimeout:
