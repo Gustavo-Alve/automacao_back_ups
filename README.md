@@ -68,7 +68,7 @@ Arquivos .bin são os backups das configurações que serão restaurados via int
 
 🧠 Como Funciona (Resumo)
 
-O script pergunta ao usuário qual modelo de equipamento será restaurado.
+O script fica rodando em loop até ser validado algum dos ips [192.168.1.1] - [192.168.0.252].
 
 Testa uma lista de possíveis IPs para encontrar um que esteja disponível.
 
@@ -88,12 +88,10 @@ Execute o script:
 python equip.py
 
 
-Responda ao prompt:
-
 Qual Modelo Do equipamento ?: (AX3000 - V9 - F670):
 
 
-Digite o modelo desejado e o script cuidará do resto.
+Através da propria interface do equipamento e possivel identificar o modelo e definir seu back-up.
 
 ❗ Observações Importantes
 
