@@ -101,17 +101,17 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="Entrar").click()
                     time.sleep(1)
+                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
+                    if elemento_locator.is_visible():
+                        elemento_locator.click()
+                    else:
+                        print('Elemento nao existe ')
+
+                        
                     senha_2 = pagina.locator("#login_error")
                     if senha_2.is_visible():
                         pagina.get_by_role("textbox", name="Senha").fill('another')
-                        time.sleep(1)
-                        elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
-                        if elemento_locator.is_visible():
-                            elemento_locator.click()
-                        else:   
-                            print('Elemento nao existe ')
-
-                        
+                        time.sleep(1)   
                         pagina.get_by_role("button", name="Entrar").click()
                         time.sleep(1)
                         pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
@@ -145,12 +145,7 @@ while True:
                     else:
                         print('senha padrao')
 
-                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
-                    if elemento_locator.is_visible():
-                        elemento_locator.click()
-                    else:
-                        print('Elemento nao existe ')
-                        
+                
                     time.sleep(1)
                     pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
                     modelo_equip = pagina.locator('//*[@id="ModelName"]').text_content()
@@ -180,9 +175,8 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="OK").click()
                     time.sleep(2)
-                    
 
-                
+
                 #Equipamento AX3000
                 elif 'aF6600P' in nome_equip:
                     pagina.get_by_role("textbox", name="Usuário").fill('multipro')
@@ -191,7 +185,7 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="Entrar").click()
                     time.sleep(1)
-                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
+                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')  
                     if elemento_locator.is_visible():
                         elemento_locator.click()
                     else:
@@ -236,15 +230,8 @@ while True:
                         time.sleep(1)
                         pagina.get_by_role("button", name="OK").click()
                         time.sleep(2)
-
                     else:
                         print('senha padrao')
-                    # Validar se elemento existe antes de clicar
-                    elemento_locator = pagina.locator('//*[@id="Outquicksetup"]')
-                    if elemento_locator.is_visible():
-                        elemento_locator.click()
-                    else:
-                        print('Elemento nao existe ')
 
 
                     pagina.get_by_role("link", name="Gerência & Diagnóstico").click()
@@ -286,6 +273,44 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="Login").click()
                     time.sleep(1)
+                    senha_2_f670 = pagina.locator("#layer_login_title div")
+                    if senha_2_f670.is_visible():
+                        pagina.locator("#Frm_Username").fill('multipro')
+                        pagina.locator("#Frm_Password").fill('wgodwl810')
+                        time.sleep(2)
+                        pagina.locator("#Frm_Password").press("Enter")
+                        time.sleep(1)
+                        pagina.wait_for_selector('iframe[name="mainFrame"]')
+                        frame = pagina.frame(name="mainFrame")
+                        frame.locator('#Frm_ModelName').wait_for(state="visible") #frame utilizado para validar os campos onde estao armazenados as informações como (MODELO - MAC)
+                        modelo_equip = frame.locator('#Frm_ModelName').inner_text()
+                        frame = pagina.frame(name="mainFrame")
+                        frame.get_by_text("User Interface").click()
+                        time.sleep(1)
+                        endereco_mac = frame.locator('#td_Bssid0').inner_text()
+                        time.sleep(1)
+                        hora = datetime.datetime.now()
+                        salvar_equipamento(
+                            modelo=modelo_equip,
+                            mac=endereco_mac,
+                            data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
+                        )
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("Administration").click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("System Management").click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("cell", name="Default Configuration Management", exact=True).click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Choose File").set_input_files(back_up_f670)
+                        time.sleep(2)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Restore Configuration").click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Confirm").click()
+                        time.sleep(1)
+                    else:
+                        print('Senha padrao')
+
+
                     pagina.wait_for_selector('iframe[name="mainFrame"]')
                     frame = pagina.frame(name="mainFrame")
                     frame.locator('#Frm_ModelName').wait_for(state="visible") #frame utilizado para validar os campos onde estao armazenados as informações como (MODELO - MAC)
@@ -323,6 +348,42 @@ while True:
                     time.sleep(1)
                     pagina.get_by_role("button", name="Login").click()
                     time.sleep(1)
+                    senha_2_f670 = pagina.locator("#layer_login_title div")
+                    if senha_2_f670.is_visible():
+                        pagina.locator("#Frm_Username").fill('multipro')
+                        pagina.locator("#Frm_Password").fill('wgodwl810')
+                        time.sleep(2)
+                        pagina.locator("#Frm_Password").press("Enter")
+                        pagina.wait_for_selector('iframe[name="mainFrame"]')
+                        frame = pagina.frame(name="mainFrame")
+                        frame.locator('#Frm_ModelName').wait_for(state="visible") #frame utilizado para validar os campos onde estao armazenados as informações como (MODELO - MAC)
+                        modelo_equip = frame.locator('#Frm_ModelName').inner_text()
+                        frame = pagina.frame(name="mainFrame")
+                        frame.get_by_text("User Interface").click()
+                        time.sleep(1)
+                        endereco_mac = frame.locator('#td_Bssid0').inner_text()
+                        time.sleep(1)
+                        hora = datetime.datetime.now()
+                        salvar_equipamento(
+                            modelo=modelo_equip,
+                            mac=endereco_mac,
+                            data= f'{hora.year}/{hora.month}/{hora.hour}:{hora.minute}'
+                        )
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("Administration").click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_text("System Management").click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("cell", name="Default Configuration Management", exact=True).click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Choose File").set_input_files(back_up_f670)
+                        time.sleep(2)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Restore Configuration").click()
+                        time.sleep(1)
+                        pagina.locator("iframe[name=\"mainFrame\"]").content_frame.get_by_role("button", name="Confirm").click()
+                        time.sleep(1)
+                    else:
+                        print('Senha padrao')
+
                     pagina.wait_for_selector('iframe[name="mainFrame"]')
                     frame = pagina.frame(name="mainFrame")
                     frame.locator('#Frm_ModelName').wait_for(state="visible") #frame utilizado para validar os campos onde estao armazenados as informações como (MODELO - MAC)
