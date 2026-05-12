@@ -109,6 +109,3 @@ Contribuições são bem-vindas!
 Se quiser adicionar suporte a mais equipamentos, melhorar a lógica de detecção de IP ou parametrizar credenciais, abra um issue ou pull request.
 
 📄 Licença
-
-Este projeto ainda não especifica uma licença no repositório.
-Recomenda-se adicionar um arquivo LICENSE apropriado para uso aberto e reutilização.
